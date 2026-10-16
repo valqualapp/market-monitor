@@ -108,9 +108,10 @@ footer p{margin:0 0 10px;max-width:900px}
     <div class="eyebrow">ValQual · Market Monitor · EE. UU.</div>
     <h1>El mercado, en cinco claves.</h1>
     <p>Una lectura semanal y objetiva del contexto del mercado estadounidense: tendencia, condiciones financieras, ciclo económico, amplitud e inflación. Con datos públicos y oficiales, para entender el entorno antes de analizar empresas.</p>
+    <p style="color:var(--soft)"><b style="color:var(--text)">Se actualiza solo los fines de semana, a propósito:</b> mirar el mercado cada día añade ruido, no información. Una revisión semanal es suficiente; lo importante se mide en años.</p>
     <div class="pills">
       <span class="pill"><span class="dot"></span><span id="updated">Cargando datos…</span></span>
-      <span class="pill">Se actualiza automáticamente cada semana</span>
+      <span class="pill">Se actualiza cada fin de semana, para evitar el ruido</span>
     </div>
     <div class="demo" id="demo">⚠ <b>Datos de demostración.</b> Los valores de esta página son sintéticos y sirven solo para revisar el diseño. NO son datos de mercado.</div>
     <div class="error" id="error">No se han podido cargar los datos de la página. Inténtalo de nuevo en unos minutos.</div>
@@ -132,7 +133,7 @@ footer p{margin:0 0 10px;max-width:900px}
     <div class="card chart-card" style="margin-top:14px">
       <div class="chart-top">
         <div class="legend"><span><i style="background:#f3f2ee"></i>S&amp;P 500</span><span><i style="background:var(--gold)"></i>SMA 200D</span></div>
-        <div class="ranges" id="ranges"><button data-m="6">6M</button><button data-m="12" class="active">1A</button><button data-m="24">2A</button></div>
+        <div class="ranges" id="ranges"><button data-m="12">1A</button><button data-m="24">2A</button><button data-m="60" class="active">5A</button></div>
       </div>
       <div class="main-chart"><canvas id="spChart" aria-label="Gráfico del S&P 500 con su media móvil de 200 sesiones"></canvas></div>
       <div class="note" id="spNote"></div>
@@ -176,6 +177,15 @@ footer p{margin:0 0 10px;max-width:900px}
     <p class="lead">La inflación condiciona la política de tipos de la Reserva Federal. El petróleo es su componente más volátil y el oro, un activo refugio sensible a los tipos reales y a la incertidumbre.</p>
     <div class="grid g3" id="infl"></div>
     <div class="reading" id="rd-inflation"></div>
+  </section>
+  <!-- 6 COMO USARLO -->
+  <section class="block" id="uso">
+    <div class="block-head"><span class="num">06</span><h2>Cómo usar esta información</h2></div>
+    <div class="card" style="max-width:860px">
+      <p style="margin:0 0 10px;color:var(--soft)"><b style="color:var(--text)">El contexto cambia; tu proceso, no.</b> Estos indicadores ayudan a entender el entorno en el que inviertes, no a decidir cuándo entrar o salir del mercado.</p>
+      <p style="margin:0 0 10px;color:var(--soft)">Las caídas y los periodos de tensión forman parte del recorrido normal de la bolsa. Verlos en perspectiva, como en el gráfico de cinco años, ayuda a no reaccionar a cada titular.</p>
+      <p style="margin:0;color:var(--soft)">Por eso esta página se actualiza solo una vez por semana: menos ruido, más perspectiva.</p>
+    </div>
   </section>
 </main>
 
@@ -276,7 +286,7 @@ function render(d){
     const vals=H.slice(i).flatMap(h=>[h[1],h[2]]).filter(v=>v!=null);const pad=(Math.max(...vals)-Math.min(...vals))*.06;
     spChart.options.scales.y.min=Math.min(...vals)-pad;spChart.options.scales.y.max=Math.max(...vals)+pad;spChart.update();}
   $('ranges').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{$('ranges').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));setRange(+b.dataset.m);}));
-  setRange(12);
+  setRange(60);
 
   // Condiciones financieras
   const I=d.indicators;
