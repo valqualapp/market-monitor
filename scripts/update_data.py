@@ -54,12 +54,18 @@ HISTORY_YEARS = {"D": 3, "W": 3, "M": 6}
 # ---------------------------------------------------------------------------
 # Descarga
 # ---------------------------------------------------------------------------
-def _get(url: str, retries: int = 4) -> str:
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+    "Accept": "text/csv,application/json,text/plain,*/*",
+}
+
+
+def _get(url: str, retries: int = 3) -> str:
     last = None
     for i in range(retries):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "ValQual-Market-Monitor/1.0"})
-            with urllib.request.urlopen(req, timeout=40) as r:
+            req = urllib.request.Request(url, headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=25) as r:
                 return r.read().decode("utf-8")
         except Exception as e:  # noqa: BLE001
             last = e
@@ -257,11 +263,13 @@ def readings(d):
 # Principal
 # ---------------------------------------------------------------------------
 def main(demo: bool = False):
+    sys.stdout.reconfigure(line_buffering=True)
     today = datetime.now(timezone.utc).date()
     raw: dict[str, list[tuple[date, float]]] = {}
     errors = []
     for sid, meta in SERIES.items():
         start = today - timedelta(days=365 * HISTORY_YEARS[meta["freq"]])
+        print(f"... {sid}")
         try:
             raw[sid] = demo_series(sid, start, today) if demo else fetch_fred(sid, start)
             print(f"OK  {sid}: {len(raw[sid])} obs, último {raw[sid][-1][0]}")
