@@ -48,7 +48,7 @@ SERIES = {
 }
 
 # Años de historia a descargar por frecuencia (la SMA 200 necesita ~1 año extra)
-HISTORY_YEARS = {"D": 3, "W": 3, "M": 6}
+HISTORY_YEARS = {"D": 6, "W": 3, "M": 6}
 
 
 # ---------------------------------------------------------------------------
@@ -312,7 +312,7 @@ def main(demo: bool = False):
     wk = value_on_or_before(sp, sp[-1][0] - timedelta(days=7))
     m3 = value_on_or_before(sp, sp[-1][0] - timedelta(days=91))
     ytd_base = value_on_or_before(sp, date(sp[-1][0].year - 1, 12, 31))
-    sp_hist = [[d.isoformat(), r(v, 2), r(s, 2)] for (d, v), s in zip(sp, s200) if d >= two_years]
+    sp_hist = [[d.isoformat(), r(v, 2), r(s, 2)] for (d, v), s in zip(sp, s200) if d >= five_years]
 
     sp500 = {
         "name": "S&P 500", "source": SERIES["SP500"]["source"],
