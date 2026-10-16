@@ -262,6 +262,24 @@ def readings(d):
 # ---------------------------------------------------------------------------
 # Principal
 # ---------------------------------------------------------------------------
+def tones(d):
+    """Color de cada lectura: good (verde), warn (ámbar), bad (rojo). Reglas fijas."""
+    t = {}
+    sp = d["sp500"]
+    up, rising = sp["distance_pct"] >= 0, sp["sma_slope_pct"] > 0
+    t["trend"] = "good" if (up and rising) else ("bad" if (not up and sp["sma_slope_pct"] < 0) else "warn")
+    vix = d["indicators"]["VIXCLS"]["last"]
+    t["vix"] = "good" if vix < 20 else ("warn" if vix < 30 else "bad")
+    nfci_ok = d["indicators"]["NFCI"]["last"] < 0
+    curve_ok = d["indicators"]["T10Y2Y"]["last"] >= 0
+    t["financial"] = "good" if (nfci_ok and curve_ok) else ("bad" if (not nfci_ok and not curve_ok) else "warn")
+    sahm = d["indicators"]["SAHMREALTIME"]["last"]
+    t["cycle"] = "bad" if sahm >= 0.5 else ("warn" if sahm >= 0.3 else "good")
+    cpi = d["cpi_yoy"]["last"]
+    t["inflation"] = "good" if cpi <= 2.5 else ("warn" if cpi <= 4 else "bad")
+    return t
+
+
 def main(demo: bool = False):
     sys.stdout.reconfigure(line_buffering=True)
     today = datetime.now(timezone.utc).date()
@@ -349,7 +367,8 @@ def main(demo: bool = False):
         "cpi_yoy": cpi_yoy,
         "icsa_4w_avg": r(icsa_4w, 0),
     }
-    data["readings"] = {k: {"label": v[0], "text": v[1]} for k, v in readings(data).items()}
+    tn = tones(data)
+    data["readings"] = {k: {"label": v[0], "text": v[1], "tone": tn.get(k, "")} for k, v in readings(data).items()}
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     tmp = OUT.with_suffix(".tmp")
