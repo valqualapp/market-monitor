@@ -25,11 +25,17 @@ jobs:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}   # opcional; si no existe se usa el CSV público
         run: python scripts/update_data.py
 
+      - name: Descargar datos de Europa (BCE) y regenerar europe.json
+        continue-on-error: true
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: python scripts/update_europe.py
+
       - name: Guardar cambios en el repositorio
         run: |
           git config user.name  "valqual-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/market.json
+          git add data/
           if git diff --cached --quiet; then
             echo "Sin cambios en los datos."
           else
