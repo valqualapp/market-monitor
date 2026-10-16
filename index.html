@@ -93,6 +93,10 @@ footer p{margin:0 0 10px;max-width:900px}
 .error{background:#241c12;border:1px solid #6b5230;color:#ecd8b0;border-radius:10px;padding:16px;margin-top:20px;display:none}
 @media(max-width:900px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:1fr}.srow{grid-template-columns:1fr;gap:4px}}
 @media(max-width:640px){.wrap{padding:0 16px}.g2,.g4{grid-template-columns:1fr 1fr}.g2.stack{grid-template-columns:1fr}.main-chart{height:300px}.tv{height:340px}.kpi .value{font-size:21px}.hero{padding-top:30px}nav{display:none}}
+.region{display:inline-flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--card);margin-bottom:18px}
+.region a{padding:7px 16px;border-radius:9px;font-size:13px;font-weight:600;color:var(--soft)}
+.region a:hover{text-decoration:none;color:var(--text)}
+.region a.on{background:var(--gold);color:#111}
 </style>
 </head>
 <body>
@@ -105,6 +109,7 @@ footer p{margin:0 0 10px;max-width:900px}
 
 <main class="wrap">
   <section class="hero">
+    <div class="region" aria-label="Región"><a href="index.html" class="on">EE. UU.</a><a href="europa.html">Europa</a></div>
     <div class="eyebrow">ValQual · Market Monitor · EE. UU.</div>
     <h1>El mercado, en cinco claves.</h1>
     <p>Una lectura semanal y objetiva del contexto del mercado estadounidense: tendencia, condiciones financieras, ciclo económico, amplitud e inflación. Con datos públicos y oficiales, para entender el entorno antes de analizar empresas.</p>
