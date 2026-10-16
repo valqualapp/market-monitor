@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090a0c">
+<meta name="description" content="ValQual Market Monitor: el contexto del mercado europeo en cuatro bloques, actualizado cada semana con datos públicos.">
+<title>Market Monitor Europa | ValQual</title>
+<link rel="icon" href="https://valqual.app/favicon.ico" sizes="32x32">
+<link rel="icon" href="https://valqual.app/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="https://valqual.app/app/apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#090a0c;--card:#121418;--card2:#171a1f;--line:#2a2d33;--text:#f3f2ee;--muted:#9fa2aa;--soft:#c9cbd0;--gold:#d6ad59;--gold2:#8f733a;--up:#6cc3a0;--down:#e07a6b}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 'Inter',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--gold);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:1180px;margin:auto;padding:0 24px}
+header{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(9,10,12,.92);backdrop-filter:blur(8px);z-index:10}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:78px}
+.logo{display:flex;align-items:center;gap:12px;font-size:22px;font-weight:600;letter-spacing:.5px;color:#fff;text-decoration:none;white-space:nowrap}
+.logo:hover{opacity:.85;text-decoration:none}
+.logo-circle{width:46px;height:46px;border-radius:50%;border:2px solid #fff;background:transparent;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;letter-spacing:0;flex:none}
+@media(max-width:768px){.logo{font-size:18px}.logo-circle{width:40px;height:40px;font-size:16px}}
+nav{display:flex;gap:18px;font-size:13px;overflow-x:auto;scrollbar-width:none}
+nav a{color:var(--soft);white-space:nowrap}nav a:hover{color:var(--gold);text-decoration:none}
+.eyebrow{color:var(--gold);letter-spacing:.18em;text-transform:uppercase;font-size:11px;font-weight:800}
+.hero{padding:44px 0 10px}
+.hero h1{font-size:clamp(32px,5vw,52px);line-height:1.08;letter-spacing:-.03em;margin:10px 0 12px}
+.hero p{color:var(--muted);max-width:700px;margin:0 0 18px}
+.pills{display:flex;gap:10px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:40px;padding:6px 13px;font-size:12px;color:var(--soft)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--gold)}
+.demo{background:#3a1f1a;border:1px solid #8a3f33;color:#ffd1c7;border-radius:10px;padding:12px 16px;margin-top:18px;font-size:13px;display:none}
+section.block{padding:34px 0 6px;scroll-margin-top:70px}
+.block-head{display:flex;align-items:baseline;gap:14px;margin-bottom:6px}
+.num{color:var(--gold);font-weight:800;font-size:13px;letter-spacing:.1em}
+h2{font-size:24px;letter-spacing:-.02em;margin:0}
+.lead{color:var(--muted);margin:0 0 16px;max-width:760px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.kpi .label{font-size:12px;color:var(--muted);margin-bottom:4px}
+.kpi .value{font-size:26px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.kpi .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.chg{font-variant-numeric:tabular-nums;font-weight:600}
+.chg.up{color:var(--up)}.chg.down{color:var(--down)}.chg.flat{color:var(--muted)}
+.chart-card{padding:18px 18px 10px}
+.chart-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--soft)}
+.legend i{display:inline-block;width:18px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.ranges{display:flex;gap:6px}
+.ranges button{font:inherit;font-size:12px;background:var(--card2);border:1px solid var(--line);color:var(--soft);border-radius:8px;padding:5px 11px;cursor:pointer}
+.ranges button.active{background:var(--gold);border-color:var(--gold);color:#111;font-weight:700}
+.main-chart{height:400px;position:relative}
+.ind h3{font-size:14px;margin:0 0 2px;font-weight:600}
+.ind .what{font-size:12px;color:var(--muted);margin:0 0 10px;min-height:36px}
+.ind .row{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.ind .value{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.ind .meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+.spark{height:70px;margin-top:10px;position:relative}
+.ind .src{font-size:11px;margin-top:8px;display:block;color:var(--muted)}
+.ind .src a{color:var(--gold)}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:500;font-size:12px;white-space:nowrap}
+td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+td small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+tr:last-child td{border-bottom:0}
+table{min-width:680px}td:first-child{min-width:220px}
+.reading{border-left:3px solid var(--gold);background:#16140f;padding:13px 16px;border-radius:5px;margin-top:14px;color:var(--soft);font-size:14px}
+.reading b{color:var(--text)}
+.summary{display:grid;gap:0}
+.srow{display:grid;grid-template-columns:170px 200px 1fr;gap:14px;padding:13px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.srow:last-child{border-bottom:0}
+.srow .k{font-weight:600;font-size:14px}
+.tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold2);border-radius:30px;padding:2px 10px;white-space:nowrap}
+.srow .t{color:var(--soft);font-size:14px}
+.tag.good{color:#6cc3a0;border-color:rgba(108,195,160,.55);background:rgba(108,195,160,.08)}
+.tag.warn{color:#f0a04b;border-color:rgba(240,160,75,.55);background:rgba(240,160,75,.08)}
+.tag.bad{color:#e07a6b;border-color:rgba(224,122,107,.6);background:rgba(224,122,107,.09)}
+.key{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:-6px 0 14px}
+.key i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0}
+.tv{height:420px}.tv.small{height:260px}
+.tradingview-widget-container,.tradingview-widget-container__widget{height:100%;width:100%}
+.note{font-size:12px;color:var(--muted);margin-top:8px}
+footer{border-top:1px solid var(--line);margin-top:46px;padding:26px 0 40px;font-size:12px;color:var(--muted)}
+footer p{margin:0 0 10px;max-width:900px}
+.error{background:#241c12;border:1px solid #6b5230;color:#ecd8b0;border-radius:10px;padding:16px;margin-top:20px;display:none}
+@media(max-width:900px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:1fr}.srow{grid-template-columns:1fr;gap:4px}}
+@media(max-width:640px){.wrap{padding:0 16px}.g2,.g4{grid-template-columns:1fr 1fr}.g2.stack{grid-template-columns:1fr}.main-chart{height:300px}.tv{height:340px}.kpi .value{font-size:21px}.hero{padding-top:30px}nav{display:none}}
+.region{display:inline-flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--card);margin-bottom:18px}
+.region a{padding:7px 16px;border-radius:9px;font-size:13px;font-weight:600;color:var(--soft)}
+.region a:hover{text-decoration:none;color:var(--text)}
+.region a.on{background:var(--gold);color:#111}
+</style>
+</head>
+<body>
+<header><div class="wrap nav">
+  <a class="logo" href="https://valqual.app/"><span class="logo-circle">VQ</span><span class="logo-text">ValQual Market Monitor</span></a>
+  <nav aria-label="Secciones">
+    <a href="#resumen">Resumen</a><a href="#tendencia">Tendencia</a><a href="#financieras">Condiciones financieras</a><a href="#ciclo">Ciclo</a><a href="#inflacion">Inflación</a>
+  </nav>
+</div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="region" aria-label="Región"><a href="index.html">EE. UU.</a><a href="europa.html" class="on">Europa</a></div>
+    <div class="eyebrow">ValQual · Market Monitor · Europa</div>
+    <h1>El mercado europeo, en cuatro claves.</h1>
+    <p>Una lectura semanal y objetiva del contexto de la zona euro: tendencia, condiciones financieras, ciclo económico e inflación. Con datos oficiales del Banco Central Europeo y Eurostat, para entender el entorno antes de analizar empresas.</p>
+    <p style="color:var(--soft)"><b style="color:var(--text)">Se actualiza solo los fines de semana, a propósito:</b> mirar el mercado cada día añade ruido, no información. Una revisión semanal es suficiente; lo importante se mide en años.</p>
+    <div class="pills">
+      <span class="pill"><span class="dot"></span><span id="updated">Cargando datos…</span></span>
+      <span class="pill">Se actualiza cada fin de semana, para evitar el ruido</span>
+    </div>
+    <div class="demo" id="demo">⚠ <b>Datos de demostración.</b> Los valores de esta página son sintéticos y sirven solo para revisar el diseño. NO son datos de mercado.</div>
+    <div class="error" id="error">No se han podido cargar los datos de la página. Inténtalo de nuevo en unos minutos.</div>
+  </section>
+
+  <!-- RESUMEN -->
+  <section class="block" id="resumen">
+    <div class="block-head"><span class="num">00</span><h2>Resumen de la semana</h2></div>
+    <p class="lead">Lectura automática basada en reglas fijas y transparentes. Describe el contexto; no es una señal de compra o venta.</p>
+    <div class="key"><span><i style="background:#6cc3a0"></i>Favorable o normal</span><span><i style="background:#f0a04b"></i>A vigilar</span><span><i style="background:#e07a6b"></i>Preocupante</span></div>
+    <div class="card summary" id="summary"></div>
+  </section>
+
+  <!-- 1 TENDENCIA -->
+  <section class="block" id="tendencia">
+    <div class="block-head"><span class="num">01</span><h2>Tendencia del mercado</h2></div>
+    <p class="lead">El <b>Euro Stoxx 50</b> reúne a las 50 mayores empresas de la zona euro. Lo seguimos a través del <b>iShares Core EURO STOXX 50</b>, un ETF (fondo cotizado) que replica el índice y cotiza en euros en la bolsa alemana (Xetra). La línea de la <b>media móvil de 200 sesiones (SMA 200D)</b> es el precio medio de los últimos ~10 meses: que el precio esté por encima o por debajo de ella es una referencia clásica de la tendencia de fondo.</p>
+    <div class="card"><div class="tv" id="tvStoxx"></div></div>
+    <p class="note">Gráfico de TradingView, puede mostrarse con retraso. La línea fina es la media de 200 sesiones («MA 200»). Si cambias el periodo a varios años, el gráfico pasa a velas semanales y la media deja de ser de 200 sesiones diarias.</p>
+  </section>
+
+  <!-- 2 CONDICIONES FINANCIERAS -->
+  <section class="block" id="financieras">
+    <div class="block-head"><span class="num">02</span><h2>Condiciones financieras</h2></div>
+    <p class="lead">Cuánto cuesta el dinero en la zona euro y con qué facilidad circula. Unas condiciones más restrictivas suelen frenar la inversión y el crédito.</p>
+    <div class="grid g2" id="fin"></div>
+    <div class="reading" id="rd-financial"></div>
+  </section>
+
+  <!-- 3 CICLO -->
+  <section class="block" id="ciclo">
+    <div class="block-head"><span class="num">03</span><h2>Ciclo económico</h2></div>
+    <p class="lead">El mercado laboral es el termómetro más fiable del ciclo. El dato es mensual y se publica con un mes de retraso: la fecha indica el periodo al que se refiere.</p>
+    <div class="grid" id="cyc"></div>
+    <div class="reading" id="rd-cycle"></div>
+  </section>
+
+  <!-- 4 INFLACIÓN -->
+  <section class="block" id="inflacion">
+    <div class="block-head"><span class="num">04</span><h2>Inflación y energía</h2></div>
+    <p class="lead">La inflación condiciona la política de tipos del Banco Central Europeo. La energía es su componente más volátil y, en Europa, la referencia del petróleo es el Brent.</p>
+    <div class="grid g2" id="infl"></div>
+    <div class="reading" id="rd-inflation"></div>
+  </section>
+
+  <!-- 5 COMO USARLO -->
+  <section class="block" id="uso">
+    <div class="block-head"><span class="num">05</span><h2>Cómo usar esta información</h2></div>
+    <div class="card" style="max-width:860px">
+      <p style="margin:0 0 10px;color:var(--soft)"><b style="color:var(--text)">El contexto cambia; tu proceso, no.</b> Estos indicadores ayudan a entender el entorno en el que inviertes, no a decidir cuándo entrar o salir del mercado.</p>
+      <p style="margin:0 0 10px;color:var(--soft)">Las caídas y los periodos de tensión forman parte del recorrido normal de la bolsa. Verlos en perspectiva ayuda a no reaccionar a cada titular.</p>
+      <p style="margin:0;color:var(--soft)">Por eso esta página se actualiza solo una vez por semana: menos ruido, más perspectiva.</p>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap">
+  <p><b>Fuentes:</b> Banco Central Europeo (ECB Data Portal): tipo de la facilidad de depósito, curva de tipos de la zona euro (AAA) y CISS; Eurostat vía BCE: desempleo e IPCA; U.S. Energy Information Administration vía FRED: petróleo Brent. Gráfico del Euro Stoxx 50: TradingView. EURO STOXX 50® es una marca de STOXX Ltd.</p>
+  <p>Información educativa y orientativa. No constituye recomendación de inversión ni asesoramiento financiero personalizado. Los datos se actualizan una vez por semana y pueden ser revisados por sus fuentes. Rentabilidades pasadas no garantizan rentabilidades futuras.</p>
+  <p>© ValQual · Value + Quality</p>
+</div></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+(function(){
+const GOLD='#d6ad59', MUTED='#9fa2aa';
+const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const $=id=>document.getElementById(id);
+
+function num(v,d){return v==null?'—':Number(v).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});}
+function unitFmt(v,u,d){if(v==null)return '—';const s=num(v,d);return u==='%'?s+' %':u==='pp'?s+' pp':u==='$'?s+' $':s;}
+function dateFmt(iso,freq){const [y,m,d]=iso.split('-').map(Number);return freq==='M'?MESES[m-1]+' '+y:d+' '+MESES[m-1]+' '+y;}
+function chg(v,d,suffix){if(v==null)return '<span class="chg flat">—</span>';v=Number(Number(v).toFixed(d));const c=v>0?'up':v<0?'down':'flat';const a=v>0?'▲':v<0?'▼':'■';return `<span class="chg ${c}">${a} ${num(Math.abs(v),d)}${suffix||''}</span>`;}
+function compareLabel(freq){return freq==='D'?'vs. hace 1 semana':freq==='W'?'vs. semana anterior':'vs. mes anterior';}
+
+const WHAT={
+  DFR:'Tipo que el BCE paga a los bancos por sus depósitos: la principal referencia de la política monetaria en la zona euro.',
+  Y10:'Rentabilidad a 10 años de la deuda pública de la zona euro con máxima calificación (AAA), calculada por el BCE: referencia del coste del dinero a largo plazo.',
+  CURVE:'Diferencia entre la rentabilidad a 10 y a 2 años. Si es negativa, la curva está «invertida», algo que históricamente ha precedido a recesiones.',
+  CISS:'Indicador de estrés financiero sistémico del BCE, de 0 a 1. Por debajo de 0,15, estrés bajo; por encima de 0,30, episodios de tensión como 2008, 2011 o 2020.',
+  UNEMP:'Porcentaje de la población activa de la zona euro que busca empleo y no lo encuentra.',
+  HICP:'Variación de los precios al consumo (IPCA) respecto al mismo mes del año anterior. El objetivo del BCE es el 2 %.',
+  BRENT:'Precio del barril de crudo Brent, la referencia del petróleo en Europa.'
+};
+
+function spark(canvas,hist){
+  new Chart(canvas,{type:'line',data:{labels:hist.map(h=>h[0]),datasets:[{data:hist.map(h=>h[1]),borderColor:GOLD,borderWidth:1.6,pointRadius:0,tension:.25,fill:false}]},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false},tooltip:{enabled:true,displayColors:false,callbacks:{title:i=>i[0].label}}},
+      scales:{x:{display:false},y:{display:false}},interaction:{intersect:false,mode:'index'}}});
+}
+
+function indCard(o,opts={}){
+  const el=document.createElement('div');el.className='card ind';
+  el.innerHTML=`<h3>${opts.title||o.name}</h3><p class="what">${WHAT[o.id]||''}</p>
+    <div class="row"><span class="value">${unitFmt(o.last,o.unit,o.digits)}</span>${chg(o.change,o.digits,o.unit==='%'||o.unit==='pp'?' pp':'')}</div>
+    <div class="meta">Dato de ${dateFmt(o.last_date,o.freq)} · ${compareLabel(o.freq)}</div>
+    <div class="spark"><canvas></canvas></div>
+    <span class="src">${o.source} · <a href="${o.url}" target="_blank" rel="noopener">ver serie ↗</a></span>`;
+  setTimeout(()=>spark(el.querySelector('canvas'),o.history),0);
+  return el;
+}
+
+function tvWidget(target,widget,config){
+  const box=$(target);const wrap=document.createElement('div');wrap.className='tradingview-widget-container';
+  const inner=document.createElement('div');inner.className='tradingview-widget-container__widget';wrap.appendChild(inner);
+  const s=document.createElement('script');s.async=true;s.src='https://s3.tradingview.com/external-embedding/embed-widget-'+widget+'.js';
+  s.textContent=JSON.stringify(config);wrap.appendChild(s);box.appendChild(wrap);
+}
+
+function render(d){
+  if(d.meta.demo)$('demo').style.display='block';
+  const up=new Date(d.meta.updated_at);
+  $('updated').textContent='Actualizado el '+up.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const R=d.readings, rows=[['Tendencia',R.trend],['Condiciones financieras',R.financial],['Ciclo económico',R.cycle],['Inflación',R.inflation]];
+  $('summary').innerHTML=rows.map(([k,r])=>`<div class="srow"><span class="k">${k}</span><span><span class="tag ${r.tone||''}">${r.label}</span></span><span class="t">${r.text}</span></div>`).join('');
+  $('rd-financial').innerHTML='<b>Lectura:</b> '+R.financial.text;
+  $('rd-cycle').innerHTML='<b>Lectura:</b> '+R.cycle.text;
+  $('rd-inflation').innerHTML='<b>Lectura:</b> '+R.inflation.text;
+  const I=d.indicators;
+  $('fin').append(indCard(I.DFR,{title:'Tipo de depósito del BCE · últimos 5 años'}),indCard(I.Y10),indCard(I.CURVE),indCard(I.CISS));
+  $('cyc').append(indCard(I.UNEMP,{title:'Tasa de desempleo zona euro · últimos 5 años'}));
+  $('infl').append(indCard(I.HICP,{title:'Inflación IPCA interanual · últimos 5 años'}),indCard(I.BRENT));
+}
+
+// Euro Stoxx 50 (vía ETF) con media de 200 sesiones
+tvWidget('tvStoxx','advanced-chart',{autosize:true,symbol:'XETR:EXW1',interval:'D',range:'12M',timezone:'Etc/UTC',theme:'dark',style:'2',locale:'es',
+  allow_symbol_change:false,hide_side_toolbar:true,hide_top_toolbar:false,withdateranges:true,save_image:false,calendar:false,
+  studies:[{id:'MASimple@tv-basicstudies',inputs:{length:200}}],backgroundColor:'rgba(18,20,24,1)',gridColor:'rgba(42,45,51,0.6)',support_host:'https://www.tradingview.com'});
+
+fetch('data/europe.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json();})
+  .then(d=>{if(typeof Chart==='undefined')throw new Error('Chart.js');Chart.defaults.font.family='Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif';Chart.defaults.color=MUTED;render(d);})
+  .catch(e=>{console.error(e);$('error').style.display='block';$('updated').textContent='Datos no disponibles';});
+})();
+</script>
+</body>
+</html>
