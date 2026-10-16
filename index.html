@@ -6,17 +6,23 @@
 <meta name="theme-color" content="#090a0c">
 <meta name="description" content="ValQual Market Monitor: el estado del mercado estadounidense en cinco bloques, actualizado cada semana con datos públicos.">
 <title>Market Monitor | ValQual</title>
+<link rel="icon" href="https://valqual.app/favicon.ico" sizes="32x32">
+<link rel="icon" href="https://valqual.app/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="https://valqual.app/app/apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{color-scheme:dark;--bg:#090a0c;--card:#121418;--card2:#171a1f;--line:#2a2d33;--text:#f3f2ee;--muted:#9fa2aa;--soft:#c9cbd0;--gold:#d6ad59;--gold2:#8f733a;--up:#6cc3a0;--down:#e07a6b}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 'Inter',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
 a{color:var(--gold);text-decoration:none}a:hover{text-decoration:underline}
 .wrap{max-width:1180px;margin:auto;padding:0 24px}
 header{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(9,10,12,.92);backdrop-filter:blur(8px);z-index:10}
-.nav{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px}
-.logo{font-weight:800;font-size:20px;letter-spacing:-.5px;color:var(--text);display:flex;align-items:center;gap:10px}
-.logo span{border:2px solid var(--text);border-radius:50%;width:34px;height:34px;display:grid;place-items:center;font-size:13px}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:78px}
+.logo{display:flex;align-items:center;gap:12px;font-size:22px;font-weight:600;letter-spacing:.5px;color:#fff;text-decoration:none;white-space:nowrap}
+.logo:hover{opacity:.85;text-decoration:none}
+.logo-circle{width:46px;height:46px;border-radius:50%;border:2px solid #fff;background:transparent;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;letter-spacing:0;flex:none}
+@media(max-width:768px){.logo{font-size:18px}.logo-circle{width:40px;height:40px;font-size:16px}}
 nav{display:flex;gap:18px;font-size:13px;overflow-x:auto;scrollbar-width:none}
 nav a{color:var(--soft);white-space:nowrap}nav a:hover{color:var(--gold);text-decoration:none}
 .eyebrow{color:var(--gold);letter-spacing:.18em;text-transform:uppercase;font-size:11px;font-weight:800}
@@ -86,7 +92,7 @@ footer p{margin:0 0 10px;max-width:900px}
 </head>
 <body>
 <header><div class="wrap nav">
-  <a class="logo" href="https://valqual.app/"><span>VQ</span>ValQual</a>
+  <a class="logo" href="https://valqual.app/"><span class="logo-circle">VQ</span><span class="logo-text">ValQual Market Monitor</span></a>
   <nav aria-label="Secciones">
     <a href="#resumen">Resumen</a><a href="#tendencia">Tendencia</a><a href="#financieras">Condiciones financieras</a><a href="#ciclo">Ciclo</a><a href="#amplitud">Amplitud</a><a href="#inflacion">Inflación</a>
   </nav>
@@ -294,7 +300,7 @@ tvWidget('tvBreadth','advanced-chart',{autosize:true,symbol:'AMEX:SPY',interval:
   compareSymbols:[{symbol:'AMEX:RSP',position:'SameScale'}],backgroundColor:'rgba(18,20,24,1)',gridColor:'rgba(42,45,51,0.6)',support_host:'https://www.tradingview.com'});
 
 fetch('data/market.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json();})
-  .then(d=>{if(typeof Chart==='undefined')throw new Error('Chart.js');Chart.defaults.font.family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif';Chart.defaults.color=MUTED;render(d);})
+  .then(d=>{if(typeof Chart==='undefined')throw new Error('Chart.js');Chart.defaults.font.family='Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif';Chart.defaults.color=MUTED;render(d);})
   .catch(e=>{console.error(e);$('error').style.display='block';$('updated').textContent='Datos no disponibles';});
 })();
 </script>
