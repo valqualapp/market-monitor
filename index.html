@@ -80,6 +80,11 @@ table{min-width:680px}td:first-child{min-width:220px}
 .srow .k{font-weight:600;font-size:14px}
 .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold2);border-radius:30px;padding:2px 10px;white-space:nowrap}
 .srow .t{color:var(--soft);font-size:14px}
+.tag.good{color:#6cc3a0;border-color:rgba(108,195,160,.55);background:rgba(108,195,160,.08)}
+.tag.warn{color:#f0a04b;border-color:rgba(240,160,75,.55);background:rgba(240,160,75,.08)}
+.tag.bad{color:#e07a6b;border-color:rgba(224,122,107,.6);background:rgba(224,122,107,.09)}
+.key{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:-6px 0 14px}
+.key i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0}
 .tv{height:420px}.tv.small{height:260px}
 .tradingview-widget-container,.tradingview-widget-container__widget{height:100%;width:100%}
 .note{font-size:12px;color:var(--muted);margin-top:8px}
@@ -115,6 +120,7 @@ footer p{margin:0 0 10px;max-width:900px}
   <section class="block" id="resumen">
     <div class="block-head"><span class="num">00</span><h2>Resumen de la semana</h2></div>
     <p class="lead">Lectura automática basada en reglas fijas y transparentes. Describe el contexto; no es una señal de compra o venta.</p>
+    <div class="key"><span><i style="background:#6cc3a0"></i>Favorable o normal</span><span><i style="background:#f0a04b"></i>A vigilar</span><span><i style="background:#e07a6b"></i>Preocupante</span></div>
     <div class="card summary" id="summary"></div>
   </section>
 
@@ -238,7 +244,7 @@ function render(d){
 
   // Resumen
   const R=d.readings, rows=[['Tendencia',R.trend],['Volatilidad',R.vix],['Condiciones financieras',R.financial],['Ciclo económico',R.cycle],['Inflación',R.inflation]];
-  $('summary').innerHTML=rows.map(([k,r])=>`<div class="srow"><span class="k">${k}</span><span><span class="tag">${r.label}</span></span><span class="t">${r.text}</span></div>`).join('');
+  $('summary').innerHTML=rows.map(([k,r])=>`<div class="srow"><span class="k">${k}</span><span><span class="tag ${r.tone||''}">${r.label}</span></span><span class="t">${r.text}</span></div>`).join('');
   $('rd-trend').innerHTML='<b>Lectura:</b> '+R.trend.text+' '+R.vix.text;
   $('rd-financial').innerHTML='<b>Lectura:</b> '+R.financial.text;
   $('rd-cycle').innerHTML='<b>Lectura:</b> '+R.cycle.text;
