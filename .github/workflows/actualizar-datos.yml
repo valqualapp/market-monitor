@@ -5,10 +5,21 @@ on:
     # Cada sábado a las 08:00 UTC (10:00 en Madrid en verano, 09:00 en invierno),
     # con el cierre del viernes ya publicado.
     - cron: "0 8 * * 6"
-  workflow_dispatch: {}   # permite lanzarlo a mano desde la pestaña Actions
+  workflow_dispatch:      # permite lanzarlo a mano desde la pestaña Actions
+    inputs:
+      email:
+        description: "Email semanal: no / prueba (solo a EMAIL_PRUEBA) / enviar (a las listas; una vez por semana)"
+        type: choice
+        options: ["no", "prueba", "enviar"]
+        default: "no"
 
 permissions:
   contents: write
+
+# Una ejecución cada vez: así una manual y la del sábado no crean dos campañas.
+concurrency:
+  group: actualizar-market-monitor
+  cancel-in-progress: false
 
 jobs:
   update:
@@ -42,6 +53,38 @@ jobs:
             git commit -m "Datos semanales $(date -u +%Y-%m-%d)"
             git push
           fi
+
+      # --- EMAIL SEMANAL (Brevo) ---------------------------------------------
+      # Se prepara siempre; solo se envía si la variable EMAIL_SEMANAL vale "on".
+      # Configuración: README, apartado «Email semanal».
+      - name: Preparar el email semanal
+        run: python scripts/email_semanal.py construir
+
+      - name: Guardar la vista previa del email
+        uses: actions/upload-artifact@v4
+        with:
+          name: email-semanal
+          path: salida/
+          retention-days: 14
+
+      - name: Enviar email de prueba
+        if: github.event_name == 'workflow_dispatch' && inputs.email == 'prueba'
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          EMAIL_PRUEBA: ${{ vars.EMAIL_PRUEBA }}
+          MONITOR_URL: ${{ vars.MONITOR_URL }}
+        run: python scripts/email_semanal.py prueba
+
+      - name: Enviar el email semanal
+        if: (github.event_name == 'schedule' || inputs.email == 'enviar') && vars.EMAIL_SEMANAL == 'on'
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          BREVO_LISTAS: ${{ vars.BREVO_LISTAS }}
+          BREVO_LIMITE: ${{ vars.BREVO_LIMITE }}
+          EMAIL_SEMANAL: ${{ vars.EMAIL_SEMANAL }}
+          EMAIL_HORA_UTC: ${{ vars.EMAIL_HORA_UTC }}
+          MONITOR_URL: ${{ vars.MONITOR_URL }}
+        run: python scripts/email_semanal.py enviar
 
       # --- OPCIONAL: publicar en Firebase Hosting en lugar de GitHub Pages ---
       # 1) En Firebase: crear una cuenta de servicio y guardarla como secreto

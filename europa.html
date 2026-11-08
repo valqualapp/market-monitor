@@ -97,6 +97,13 @@ footer p{margin:0 0 10px;max-width:900px}
 .region a{padding:7px 16px;border-radius:9px;font-size:13px;font-weight:600;color:var(--soft)}
 .region a:hover{text-decoration:none;color:var(--text)}
 .region a.on{background:var(--gold);color:#111}
+.sub p{margin:0 0 14px;color:var(--soft)}
+.btn-sub{display:inline-block;background:var(--gold);color:#111;font-weight:700;border-radius:10px;padding:11px 20px}
+.btn-sub:hover{text-decoration:none;opacity:.9}
+.sub .note{margin:12px 0 0}
+a.pill-sub{color:var(--gold);border-color:var(--gold2)}
+a.pill-sub:hover{text-decoration:none;color:var(--text)}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -117,6 +124,7 @@ footer p{margin:0 0 10px;max-width:900px}
     <div class="pills">
       <span class="pill"><span class="dot"></span><span id="updated">Cargando datos…</span></span>
       <span class="pill">Se actualiza cada fin de semana, para evitar el ruido</span>
+      <a class="pill pill-sub" id="subPill" href="#suscribirse" hidden>✉ Recíbelo cada sábado por email</a>
     </div>
     <div class="demo" id="demo">⚠ <b>Datos de demostración.</b> Los valores de esta página son sintéticos y sirven solo para revisar el diseño. NO son datos de mercado.</div>
     <div class="error" id="error">No se han podido cargar los datos de la página. Inténtalo de nuevo en unos minutos.</div>
@@ -168,7 +176,18 @@ footer p{margin:0 0 10px;max-width:900px}
     <div class="card" style="max-width:860px">
       <p style="margin:0 0 10px;color:var(--soft)"><b style="color:var(--text)">El contexto cambia; tu proceso, no.</b> Estos indicadores ayudan a entender el entorno en el que inviertes, no a decidir cuándo entrar o salir del mercado.</p>
       <p style="margin:0 0 10px;color:var(--soft)">Las caídas y los periodos de tensión forman parte del recorrido normal de la bolsa. Verlos en perspectiva ayuda a no reaccionar a cada titular.</p>
-      <p style="margin:0;color:var(--soft)">Por eso esta página se actualiza solo una vez por semana: menos ruido, más perspectiva.</p>
+      <p style="margin:0 0 10px;color:var(--soft)">Por eso esta página se actualiza solo una vez por semana: menos ruido, más perspectiva.</p>
+      <p style="margin:0;color:var(--soft)">¿Quieres entender qué mide cada indicador? El <a href="https://valqual.app/gratis?utm_source=market_monitor&amp;utm_medium=web&amp;utm_campaign=monitor_europa">Módulo 0 de ValQual</a> lo explica en 24 lecciones cortas, gratis.</p>
+    </div>
+  </section>
+
+  <!-- 06 SUSCRIPCIÓN: se muestra cuando config.json tiene el enlace del formulario de Brevo -->
+  <section class="block" id="suscribirse" hidden>
+    <div class="block-head"><span class="num">06</span><h2>Recíbelo cada sábado</h2></div>
+    <div class="card sub" style="max-width:860px">
+      <p>Un email los sábados con el resumen de la semana de EE. UU. y la zona euro: los semáforos, qué significan y un recurso para entender mejor los datos. Sin predicciones ni señales.</p>
+      <a class="btn-sub" id="subLink" href="#" target="_blank" rel="noopener">Quiero recibirlo</a>
+      <p class="note">Gratis. Te pediremos que confirmes tu email y puedes darte de baja cuando quieras. <a href="https://valqual.app/privacidad.html" target="_blank" rel="noopener">Privacidad</a>.</p>
     </div>
   </section>
 </main>
@@ -250,6 +269,16 @@ fetch('data/europe.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error(r
   .then(d=>{if(typeof Chart==='undefined')throw new Error('Chart.js');Chart.defaults.font.family='Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif';Chart.defaults.color=MUTED;render(d);})
   .catch(e=>{console.error(e);$('error').style.display='block';$('updated').textContent='Datos no disponibles';});
 })();
+</script>
+<script>
+// Suscripción por email: el enlace del formulario de Brevo se pone en config.json.
+fetch('config.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(c){
+  var u=c&&c.suscripcion_url;
+  if(!u||!/^https:\/\//.test(u))return;
+  document.getElementById('subLink').href=u;
+  document.getElementById('suscribirse').hidden=false;
+  document.getElementById('subPill').hidden=false;
+}).catch(function(){});
 </script>
 </body>
 </html>

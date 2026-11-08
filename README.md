@@ -39,6 +39,38 @@ Coste: 0 €. No requiere servidor, base de datos ni clave de API.
 - **Opcional, más estabilidad:** solicita una clave gratuita en fred.stlouisfed.org (*My Account → API Keys*) y guárdala como secreto `FRED_API_KEY`. El script la usará automáticamente.
 - **Probar el diseño sin conexión:** `python scripts/update_data.py --demo` genera datos sintéticos (la página los marca como DEMO).
 
+## Email semanal (Brevo)
+
+Cada sábado, después de actualizar los datos, la tarea prepara un email con el resumen de la semana
+(semáforos de EE. UU. y zona euro, un recurso de valqual.app y el Módulo 0) y, si está encendido,
+lo envía como campaña de Brevo. Script: `scripts/email_semanal.py` (solo biblioteca estándar).
+
+- **Se prepara siempre** y se guarda como artefacto `email-semanal` de cada ejecución (vista previa).
+- **Solo se envía** si la variable `EMAIL_SEMANAL` vale `on`. Por defecto no se envía nada.
+- **Una vez por semana:** la campaña se llama `Market Monitor · AAAA-Wnn`; si ya existe, no se repite.
+- **Sale a las 15:00 UTC del sábado** (9:00 en Ciudad de México, 16:00 en Madrid en invierno).
+- No se envía si los datos de EE. UU. no son de los últimos 3 días, si las listas superan el límite
+  diario del plan gratuito o si algún enlace del email no responde. En ese caso, GitHub avisa por email.
+- No reproduce valores del S&P 500 ni del VIX (series con copyright): usa las lecturas y los tramos.
+
+**Puesta en marcha** (Settings → Secrets and variables → Actions):
+
+| Tipo | Nombre | Valor |
+|---|---|---|
+| Secreto | `BREVO_API_KEY` | Clave de Brevo (SMTP y API → Claves API), sin vencimiento |
+| Variable | `BREVO_LISTAS` | IDs de las listas, p. ej. `6` (suscriptores del Monitor) o `6,3,4,5` |
+| Variable | `EMAIL_PRUEBA` | Opcional. Destinatario de la prueba (por defecto `info@valqual.app`) |
+| Variable | `EMAIL_SEMANAL` | `on` para enviar de verdad; cualquier otro valor lo apaga |
+| Variable | `EMAIL_HORA_UTC` | Opcional. Hora de envío en UTC, `HH:MM` (por defecto `15:00`) |
+| Variable | `MONITOR_URL` | Opcional. Dirección pública del Monitor si cambia de dominio |
+| Variable | `BREVO_LIMITE` | Opcional. Máximo de contactos por envío (por defecto 280) |
+
+**Probar:** Actions → *Actualizar Market Monitor* → *Run workflow* → email `prueba`. Llega a `EMAIL_PRUEBA`
+con el asunto «[Prueba] …» y no toca las listas.
+
+**Suscripción en la página:** pega en `config.json` (`suscripcion_url`) el enlace para compartir del
+formulario de Brevo. Mientras esté vacío, la sección «Recíbelo cada sábado» no aparece.
+
 ## Alternativa: Firebase Hosting (dentro de ValQual)
 
 Descomenta el bloque final de `.github/workflows/actualizar-datos.yml` y añade el secreto `FIREBASE_SERVICE_ACCOUNT`.
