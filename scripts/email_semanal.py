@@ -32,6 +32,8 @@ Reglas de seguridad al enviar:
 Licencias: el email no reproduce valores del S&P 500 ni del VIX (series con
 copyright de S&P Dow Jones Indices y Cboe en FRED); usa las lecturas y tramos.
 
+Diseño: el mismo marco que los demás emails de ValQual en Brevo.
+
 Solo usa la biblioteca estándar de Python.
 """
 from __future__ import annotations
@@ -118,17 +120,23 @@ PIEZAS = {
     ],
 }
 
-# Colores: texto, borde y fondo de cada etiqueta (modo claro) y clase para el modo oscuro.
+# Colores de cada etiqueta: texto, borde y fondo.
 TONOS = {
-    "good": ("#1d7a55", "#a8d9c3", "#ecf7f2", "t-good"),
-    "warn": ("#9a5a0e", "#efc796", "#fdf4e7", "t-warn"),
-    "bad": ("#ad3a2a", "#eeb2a8", "#fcedeb", "t-bad"),
-    "": ("#5f626a", "#d8d6cf", "#f4f3ef", "t-neu"),
+    "good": ("#1d7a55", "#a8d9c3", "#ecf7f2"),
+    "warn": ("#9a5a0e", "#efc796", "#fdf4e7"),
+    "bad": ("#ad3a2a", "#eeb2a8", "#fcedeb"),
+    "": ("#57606a", "#d0d7de", "#f6f8fa"),
 }
 NOMBRE_TONO = {"good": ("favorable", "favorables"), "warn": ("a vigilar", "a vigilar"),
                "bad": ("preocupante", "preocupantes")}
 
-FUENTE = "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+# Mismo marco que los demás emails de ValQual en Brevo (secuencia del Módulo 0, cupón, Ranking).
+FUENTE = "Inter,Arial,Helvetica,sans-serif"
+TEXTO = "#1f2328"
+SUAVE = "#57606a"
+PIE = "#6e7781"
+DORADO = "#8a6d1f"
+LINEA = "#e5e7eb"
 
 
 class ErrorEnvio(Exception):
@@ -270,50 +278,31 @@ def monitor_url() -> str:
 # ---------------------------------------------------------------------------
 # HTML del email
 # ---------------------------------------------------------------------------
-ESTILOS = """
-body,table,td,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}
-table,td{mso-table-lspace:0pt;mso-table-rspace:0pt}
-a{color:#7a6230}
-@media (max-width:620px){.vq-pad{padding-left:20px!important;padding-right:20px!important}.vq-h1{font-size:24px!important}}
-@media (prefers-color-scheme:dark){
-.vq-bg{background:#090a0c!important}
-.vq-card{background:#121418!important;border-color:#2a2d33!important}
-.vq-box{background:#16140f!important;border-color:#8f733a!important}
-.vq-cta{background:#171a1f!important;border-color:#2a2d33!important}
-.vq-tx{color:#f3f2ee!important}.vq-soft{color:#c9cbd0!important}.vq-mut{color:#9fa2aa!important}
-.vq-gold,.vq-gold a{color:#d6ad59!important}
-.vq-line{border-color:#2a2d33!important}
-.vq-logo{border-color:#f3f2ee!important;color:#f3f2ee!important}
-.vq-btn2{border-color:#d6ad59!important}.vq-btn2 a{color:#d6ad59!important}
-.t-good{color:#6cc3a0!important;border-color:#2f6b54!important;background:#12221b!important}
-.t-warn{color:#f0a04b!important;border-color:#7a5428!important;background:#241a0f!important}
-.t-bad{color:#e07a6b!important;border-color:#7a3a31!important;background:#25130f!important}
-.t-neu{color:#c9cbd0!important;border-color:#3a3d44!important;background:#171a1f!important}
-}
-""".strip()
-
-
 def esc(t: str) -> str:
     return html.escape(t or "", quote=True)
 
 
-def estilo(tam: int, peso: int = 400, color: str = "#3d4048", alto: str = "1.55", extra: str = "") -> str:
-    return (f"font-family:{FUENTE};font-size:{tam}px;font-weight:{peso};line-height:{alto};"
-            f"color:{color};{extra}")
+def estilo(tam: int, peso: int = 400, color: str = TEXTO, alto: str = "1.6", extra: str = "") -> str:
+    return f"font-size:{tam}px;font-weight:{peso};line-height:{alto};color:{color};{extra}"
+
+
+def antetitulo(texto: str) -> str:
+    return (f'<p style="margin:0 0 6px;{estilo(12, 700, DORADO, "1.4", "letter-spacing:.08em;text-transform:uppercase;")}">'
+            f'{esc(texto)}</p>')
 
 
 def fila_html(f: dict) -> str:
-    color, borde, fondo, clase = TONOS[f["tono"]]
-    etiqueta = (f'<span class="{clase}" style="display:inline-block;padding:3px 10px;border:1px solid {borde};'
-                f'border-radius:30px;background:{fondo};{estilo(11, 700, color, "1.4", "letter-spacing:.06em;text-transform:uppercase;")}">'
+    color, borde, fondo = TONOS[f["tono"]]
+    etiqueta = (f'<span style="display:inline-block;padding:3px 10px;border:1px solid {borde};border-radius:30px;'
+                f'background:{fondo};{estilo(11, 700, color, "1.4", "letter-spacing:.06em;text-transform:uppercase;")}">'
                 f'{esc(f["estado"])}</span>')
     return (
-        '<tr><td class="vq-line" style="padding:14px 0;border-top:1px solid #ecebe6">'
-        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
-        f'<td class="vq-tx" style="{estilo(15, 600, "#16181c", "1.3")}">{esc(f["nombre"])}</td>'
-        f'<td align="right" style="white-space:nowrap;padding-left:10px">{etiqueta}</td>'
+        f'<tr><td style="padding:14px 0;border-top:1px solid {LINEA};">'
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>'
+        f'<td style="{estilo(16, 700, TEXTO, "1.3")}">{esc(f["nombre"])}</td>'
+        f'<td align="right" style="white-space:nowrap;padding-left:10px;">{etiqueta}</td>'
         '</tr></table>'
-        f'<p class="vq-soft" style="margin:6px 0 0;{estilo(14)}">{esc(f["texto"])}</p>'
+        f'<p style="margin:6px 0 0;{estilo(15, 400, SUAVE, "1.55")}">{esc(f["texto"])}</p>'
         '</td></tr>'
     )
 
@@ -321,24 +310,24 @@ def fila_html(f: dict) -> str:
 def seccion_html(titulo: str, subtitulo: str, fs: list[dict]) -> str:
     cuerpo = "".join(fila_html(f) for f in fs)
     return (
-        '<tr><td style="padding:26px 0 6px">'
-        f'<span class="vq-gold" style="{estilo(11, 800, "#7a6230", "1.4", "letter-spacing:.18em;text-transform:uppercase;")}">{esc(titulo)}</span>'
-        f'<span class="vq-mut" style="{estilo(12, 400, "#6b6e76", "1.4")}"> · {esc(subtitulo)}</span>'
+        '<tr><td style="padding:22px 0 4px;">'
+        f'<p style="margin:0;{estilo(12, 700, DORADO, "1.4", "letter-spacing:.08em;text-transform:uppercase;")}">'
+        f'{esc(titulo)}<span style="{estilo(12, 400, PIE, "1.4", "letter-spacing:0;text-transform:none;")}"> · {esc(subtitulo)}</span></p>'
         '</td></tr>'
-        f'<tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">{cuerpo}</table></td></tr>'
+        f'<tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0">{cuerpo}</table></td></tr>'
     )
 
 
 def boton(texto: str, url: str, primario: bool) -> str:
     if primario:
-        return ('<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>'
-                '<td align="center" bgcolor="#00d26a" style="border-radius:10px;background:#00d26a">'
-                f'<a href="{esc(url)}" target="_blank" style="display:inline-block;padding:12px 22px;border-radius:10px;'
-                f'text-decoration:none;{estilo(15, 700, "#03140a", "1.2")}">{esc(texto)}</a></td></tr></table>')
-    return ('<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>'
-            '<td align="center" class="vq-btn2" style="border:1px solid #7a6230;border-radius:10px">'
-            f'<a href="{esc(url)}" target="_blank" style="display:inline-block;padding:11px 20px;border-radius:10px;'
-            f'text-decoration:none;{estilo(14, 600, "#7a6230", "1.2")}">{esc(texto)}</a></td></tr></table>')
+        return ('<table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px 0 0;"><tr>'
+                '<td style="background:#111111;border-radius:8px;">'
+                f'<a href="{esc(url)}" target="_blank" style="display:inline-block;padding:14px 24px;'
+                f'text-decoration:none;{estilo(16, 700, "#ffffff", "1.2")}">{esc(texto)}</a></td></tr></table>')
+    return ('<table role="presentation" cellpadding="0" cellspacing="0"><tr>'
+            '<td style="border:1px solid #d0d7de;border-radius:8px;">'
+            f'<a href="{esc(url)}" target="_blank" style="display:inline-block;padding:12px 22px;'
+            f'text-decoration:none;{estilo(15, 600, TEXTO, "1.2")}">{esc(texto)}</a></td></tr></table>')
 
 
 def contexto(us: dict, eu: dict | None) -> dict:
@@ -375,11 +364,11 @@ def construir_html(c: dict) -> str:
     if c["europa"]:
         partes.append(seccion_html("Zona euro", "BCE, deuda, empleo e IPCA", c["europa"]))
         partes.append(
-            f'<tr><td class="vq-soft" style="padding:4px 0 0;{estilo(13)}">La tendencia del Euro Stoxx 50 se ve en el '
-            f'<a href="{esc(url_europa)}" target="_blank" class="vq-gold" style="color:#7a6230;text-decoration:underline">gráfico de la página de Europa</a>.</td></tr>')
+            f'<tr><td style="padding:4px 0 0;{estilo(14, 400, SUAVE, "1.55")}">La tendencia del Euro Stoxx 50 se ve en el '
+            f'<a href="{esc(url_europa)}" target="_blank" style="color:{TEXTO};">gráfico de la página de Europa</a>.</td></tr>')
     else:
         partes.append(
-            f'<tr><td class="vq-mut" style="padding:20px 0 0;{estilo(13, 400, "#6b6e76")}">'
+            f'<tr><td style="padding:18px 0 0;{estilo(14, 400, PIE, "1.55")}">'
             'Los datos de la zona euro no se han podido actualizar esta semana.</td></tr>')
 
     pieza = ""
@@ -387,69 +376,59 @@ def construir_html(c: dict) -> str:
         p = c["pieza"]
         url_p = con_utm(WEB + p["url"], "recurso")
         pieza = (
-            '<tr><td style="padding:26px 0 0">'
-            f'<span class="vq-gold" style="{estilo(11, 800, "#7a6230", "1.4", "letter-spacing:.18em;text-transform:uppercase;")}">Para entender mejor</span>'
-            f'<p style="margin:8px 0 0;{estilo(16, 600, "#16181c", "1.4")}" class="vq-tx">'
-            f'<a href="{esc(url_p)}" target="_blank" class="vq-gold" style="color:#7a6230;text-decoration:none">{esc(p["tipo"])} · {esc(p["titulo"])} →</a></p>'
-            f'<p class="vq-soft" style="margin:4px 0 0;{estilo(14)}">{esc(p["texto"])}</p>'
+            '<tr><td style="padding:24px 0 0;">'
+            + antetitulo("Para entender mejor") +
+            f'<p style="margin:0;{estilo(16, 700, TEXTO, "1.45")}">'
+            f'<a href="{esc(url_p)}" target="_blank" style="color:{TEXTO};text-decoration:underline;">'
+            f'{esc(p["tipo"])} · {esc(p["titulo"])}</a></p>'
+            f'<p style="margin:4px 0 0;{estilo(15, 400, SUAVE, "1.55")}">{esc(p["texto"])}</p>'
             '</td></tr>')
 
     cuerpo = "".join(partes)
-    return f"""<!DOCTYPE html>
-<html lang="es" xmlns="http://www.w3.org/1999/xhtml">
+    return f"""<!doctype html>
+<html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="color-scheme" content="light dark">
-<meta name="supported-color-schemes" content="light dark">
 <title>{esc(c["asunto"])}</title>
-<style>{ESTILOS}</style>
 </head>
-<body class="vq-bg" style="margin:0;padding:0;background:#f3f2ee">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="vq-bg" style="background:#f3f2ee">
-<tr><td align="center" style="padding:24px 12px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px">
-
-<tr><td style="padding:0 4px 16px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-<td width="44" style="width:44px"><div class="vq-logo" style="width:36px;height:36px;border:2px solid #16181c;border-radius:50%;text-align:center;{estilo(14, 800, "#16181c", "36px")}">VQ</div></td>
-<td class="vq-tx" style="padding-left:10px;{estilo(17, 600, "#16181c", "1.2", "letter-spacing:.3px;")}">ValQual Market Monitor</td>
+<body style="margin:0;padding:0;background:#eef0f3;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef0f3;">
+<tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;font-family:{FUENTE};">
+<tr><td style="background:#0b0b0c;padding:18px 28px;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td style="width:34px;height:34px;border:2px solid #ffffff;border-radius:50%;text-align:center;font-size:13px;font-weight:800;color:#ffffff;">VQ</td>
+<td style="padding-left:12px;font-size:16px;font-weight:700;color:#ffffff;">ValQual Market Monitor</td>
 </tr></table>
 </td></tr>
-
-<tr><td class="vq-card vq-pad" style="background:#ffffff;border:1px solid #e4e2db;border-radius:14px;padding:28px 32px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-<tr><td><span class="vq-gold" style="{estilo(11, 800, "#7a6230", "1.4", "letter-spacing:.18em;text-transform:uppercase;")}">Actualizado el {esc(fecha_larga(c["actualizado"]))}</span></td></tr>
-<tr><td style="padding:10px 0 0"><h1 class="vq-tx vq-h1" style="margin:0;{estilo(28, 800, "#16181c", "1.15", "letter-spacing:-.02em;")}">El mercado esta semana, sin ruido</h1></td></tr>
-<tr><td class="vq-soft" style="padding:12px 0 0;{estilo(15)}">Una vez por semana, el contexto del mercado en pocas líneas: datos públicos leídos con reglas fijas. Describe el entorno; no es una señal de compra o venta.</td></tr>
-<tr><td class="vq-mut" style="padding:10px 0 0;{estilo(12, 400, "#6b6e76", "1.5")}">Verde: favorable o normal · Ámbar: a vigilar · Rojo: preocupante</td></tr>
+<tr><td style="padding:28px 28px 8px;">
+{antetitulo("Actualizado el " + fecha_larga(c["actualizado"]))}
+<p style="margin:0 0 14px;{estilo(24, 800, TEXTO, "1.25", "letter-spacing:-.01em;")}">El mercado esta semana, sin ruido</p>
+<p style="margin:0 0 10px;{estilo(16)}">Una vez por semana, el contexto del mercado en pocas líneas: datos públicos leídos con reglas fijas. Describe el entorno; no es una señal de compra o venta.</p>
+<p style="margin:0;{estilo(13, 400, PIE, "1.5")}">Verde: favorable o normal · Ámbar: a vigilar · Rojo: preocupante</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 {cuerpo}
-<tr><td style="padding:26px 0 0">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="vq-box" style="background:#faf6ec;border-left:3px solid #c9a24f;border-radius:6px"><tr><td style="padding:14px 16px">
-<p class="vq-tx" style="margin:0;{estilo(15, 700, "#16181c", "1.4")}">El contexto cambia; tu proceso, no.</p>
-<p class="vq-soft" style="margin:6px 0 0;{estilo(14)}">Estos datos ayudan a entender el entorno en el que inviertes, no a decidir cuándo entrar o salir del mercado. Las caídas y los periodos de tensión forman parte del recorrido normal de la bolsa.</p>
+<tr><td style="padding:24px 0 0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f8fa;border-left:3px solid {DORADO};border-radius:6px;"><tr><td style="padding:14px 16px;">
+<p style="margin:0;{estilo(16, 700, TEXTO, "1.45")}">El contexto cambia; tu proceso, no.</p>
+<p style="margin:6px 0 0;{estilo(15, 400, SUAVE, "1.55")}">Estos datos ayudan a entender el entorno en el que inviertes, no a decidir cuándo entrar o salir del mercado. Las caídas y los periodos de tensión forman parte del recorrido normal de la bolsa.</p>
 </td></tr></table>
 </td></tr>
 {pieza}
-<tr><td style="padding:26px 0 0">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="vq-cta" style="background:#f6f5f1;border:1px solid #e4e2db;border-radius:12px"><tr><td style="padding:18px 18px 20px">
-<p class="vq-tx" style="margin:0;{estilo(16, 700, "#16181c", "1.35")}">¿Qué hay detrás de estos datos?</p>
-<p class="vq-soft" style="margin:6px 0 14px;{estilo(14)}">La inflación, los tipos de interés y el ciclo económico se explican en el Módulo 0 de ValQual: 24 lecciones cortas, gratis. Si ya tienes cuenta, entra y sigue donde lo dejaste.</p>
-{boton("Empezar el Módulo 0 gratis", url_gratis, True)}
-</td></tr></table>
+<tr><td style="padding:24px 0 0;">
+{antetitulo("Módulo 0 gratis")}
+<p style="margin:0 0 14px;{estilo(16)}">La inflación, los tipos de interés y el ciclo económico se explican en el Módulo 0 de ValQual: 24 lecciones cortas, gratis. Si ya tienes cuenta, entra y sigue donde lo dejaste.</p>
+{boton("Empezar el Módulo 0 →", url_gratis, True)}
 </td></tr>
-<tr><td style="padding:20px 0 0">{boton("Ver el Market Monitor completo", url_monitor, False)}</td></tr>
+<tr><td style="padding:16px 0 24px;">{boton("Ver el Market Monitor completo", url_monitor, False)}</td></tr>
 </table>
 </td></tr>
-
-<tr><td class="vq-mut vq-pad" style="padding:20px 32px 0;{estilo(12, 400, "#6b6e76", "1.55")}">
-<p style="margin:0 0 10px">Contenido educativo. No es asesoramiento financiero ni una recomendación de inversión. Invertir implica riesgo de pérdida.</p>
-<p style="margin:0 0 10px">Fuentes: FRED (Federal Reserve Bank of St. Louis), U.S. Bureau of Labor Statistics, U.S. Department of Labor, U.S. Treasury, Federal Reserve Bank of Chicago, U.S. Energy Information Administration, Cboe, Banco Central Europeo y Eurostat. Cada dato tiene su propia frecuencia; la página muestra la fecha de cada uno.</p>
-<p style="margin:0 0 10px">Recibes este email porque te suscribiste al Market Monitor de ValQual o aceptaste recibir emails de ValQual. <a href="{{{{ unsubscribe }}}}" target="_blank" class="vq-mut" style="color:#6b6e76;text-decoration:underline">Darte de baja</a></p>
-<p style="margin:0">ValQual · <a href="mailto:info@valqual.app" class="vq-mut" style="color:#6b6e76;text-decoration:underline">info@valqual.app</a> · <a href="{{{{ mirror }}}}" target="_blank" class="vq-mut" style="color:#6b6e76;text-decoration:underline">Ver en el navegador</a></p>
+<tr><td style="padding:18px 28px 24px;border-top:1px solid {LINEA};">
+<p style="margin:0 0 10px;{estilo(12, 400, PIE, "1.5")}">Contenido educativo. No es asesoramiento financiero ni una recomendación de inversión. Invertir implica riesgo de pérdida.</p>
+<p style="margin:0 0 10px;{estilo(12, 400, PIE, "1.5")}">Fuentes: FRED (Federal Reserve Bank of St. Louis), U.S. Bureau of Labor Statistics, U.S. Department of Labor, U.S. Treasury, Federal Reserve Bank of Chicago, U.S. Energy Information Administration, Cboe, Banco Central Europeo y Eurostat. Cada dato tiene su propia frecuencia; la página muestra la fecha de cada uno.</p>
+<p style="margin:0;{estilo(12, 400, PIE, "1.5")}">Recibes este email porque te suscribiste al Market Monitor de ValQual o aceptaste recibir emails de ValQual. <a href="{{{{ unsubscribe }}}}" style="color:{PIE};">Darme de baja</a> · <a href="https://valqual.app/privacidad.html" style="color:{PIE};">Privacidad</a> · <a href="{{{{ mirror }}}}" style="color:{PIE};">Ver en el navegador</a><br>ValQual · valqual.app · info@valqual.app</p>
 </td></tr>
-
 </table>
 </td></tr>
 </table>
