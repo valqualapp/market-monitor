@@ -693,7 +693,7 @@ def construir() -> int:
 
 def prueba() -> int:
     clave = leer_clave()
-    destino =os.environ.get("EMAIL_PRUEBA", "").strip() or "info@valqual.app"
+    destino = os.environ.get("EMAIL_PRUEBA", "").strip() or "info@valqual.app"
     ahora = ahora_utc()
     c, html_brevo = preparar(comprobar=True)
     for nombre, url in enlaces(c).items():
@@ -707,13 +707,12 @@ def prueba() -> int:
             if e.estado != 400:  # 400 = el contacto ya existe
                 raise
         nombre = f"PRUEBA · {c['campana']} · {ahora:%H%M%S}"
-        _, j = brevo(clave, "POST", "/emailCampaigns", {
+        camp = crear_campana(clave, {
             "name": nombre, "subject": "[Prueba] " + c["asunto"], "previewText": c["preheader"],
             "sender": REMITENTE, "replyTo": RESPONDER_A, "htmlContent": html_brevo,
-            "mirrorActive": True, "inlineImageActivation": False, "tag": "market-monitor-prueba"})
+            "mirrorActive": True, "inlineImageActivation": False})
     except BrevoError as e:
         raise ErrorEnvio(explicar(e)) from None
-    camp = int(j["id"])
     try:
         brevo(clave, "POST", f"/emailCampaigns/{camp}/sendTest", {"emailTo": [destino]})
     except BrevoError as e:
@@ -727,6 +726,32 @@ def prueba() -> int:
           f"El borrador «{nombre}» queda en Brevo y se borra en la próxima prueba.")
     resumen_github(["### Email de prueba enviado", f"- Para: {destino}", f"- Asunto: [Prueba] {c['asunto']}"])
     return 0
+
+
+# Opciones de campaña que algunos planes de Brevo no permiten («You are not allowed to avail tag
+# option for your campaign», 405 en el plan gratuito). La campaña puede salir sin ellas.
+OPCIONES_DE_PLAN = (("mirror", "mirrorActive"), ("inline", "inlineImageActivation"),
+                    ("schedul", "scheduledAt"), ("tag", "tag"))
+
+
+def crear_campana(clave: str, cuerpo: dict) -> int:
+    """POST /emailCampaigns. Si el plan no permite una opción, la quita de `cuerpo` y lo intenta otra vez.
+
+    Repetirlo es seguro: cuando Brevo rechaza la petición, no crea nada.
+    """
+    while True:
+        try:
+            _, j = brevo(clave, "POST", "/emailCampaigns", cuerpo)
+            return int(j["id"])
+        except BrevoError as e:
+            texto = str(e).lower()
+            quitar = None
+            if "not allowed to avail" in texto:
+                quitar = next((campo for pista, campo in OPCIONES_DE_PLAN if pista in texto and campo in cuerpo), None)
+            if not quitar:
+                raise
+            cuerpo.pop(quitar)
+            aviso(f"Brevo no permite «{quitar}» en este plan ({e}): la campaña se crea sin esa opción.")
 
 
 def borrar_pruebas_anteriores(clave: str) -> None:
@@ -788,19 +813,19 @@ def enviar() -> int:
         cuerpo = {"name": c["campana"], "subject": c["asunto"], "previewText": c["preheader"],
                   "sender": REMITENTE, "replyTo": RESPONDER_A, "htmlContent": html_brevo,
                   "recipients": {"listIds": listas}, "mirrorActive": True,
-                  "inlineImageActivation": False, "tag": "market-monitor"}
+                  "inlineImageActivation": False}
         if programada:
             cuerpo["scheduledAt"] = programada.strftime("%Y-%m-%dT%H:%M:%S.000Z")
         try:
-            _, j = brevo(clave, "POST", "/emailCampaigns", cuerpo)
+            camp = crear_campana(clave, cuerpo)
         except BrevoError as e:
             if not (programada and e.estado == 400 and "schedul" in str(e).lower()):
                 raise
             aviso(f"Brevo no deja programar la campaña ({e}): se envía en el momento.")
             cuerpo.pop("scheduledAt")
+            camp = crear_campana(clave, cuerpo)
+        if "scheduledAt" not in cuerpo:  # Brevo no dejó programarla: sale ahora
             programada = None
-            _, j = brevo(clave, "POST", "/emailCampaigns", cuerpo)
-        camp = int(j["id"])
         if not programada:
             brevo(clave, "POST", f"/emailCampaigns/{camp}/sendNow")
     except BrevoError as e:
