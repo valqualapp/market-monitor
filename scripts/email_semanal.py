@@ -38,9 +38,12 @@ Solo usa la biblioteca estándar de Python.
 """
 from __future__ import annotations
 
+import base64
+import binascii
 import html
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -508,10 +511,66 @@ def brevo(clave: str, metodo: str, ruta: str, cuerpo: dict | None = None, params
     raise BrevoError(0, "sin respuesta de Brevo")
 
 
+RE_CLAVE_API = re.compile(r"xkeysib-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*")
+
+
+def _desde_base64(texto: str) -> str | None:
+    """El texto decodificado, si `texto` parece base64 (así da Brevo la versión «MCP» de la clave)."""
+    t = re.sub(r"\s+", "", texto)
+    if len(t) < 24 or not re.fullmatch(r"[A-Za-z0-9+/_-]+={0,2}", t):
+        return None
+    t = t.replace("-", "+").replace("_", "/")
+    t += "=" * (-len(t) % 4)
+    try:
+        return base64.b64decode(t).decode("utf-8")
+    except (binascii.Error, ValueError):
+        return None
+
+
+def leer_clave() -> str:
+    """La clave de API de Brevo del secreto BREVO_API_KEY. Nunca la escribe en el registro.
+
+    Acepta la clave sola (xkeysib-…), con espacios o texto alrededor, o la versión «MCP»
+    que Brevo da codificada en base64 (lleva dentro la misma clave xkeysib-…).
+    """
+    crudo = os.environ.get("BREVO_API_KEY", "")
+    if not crudo.strip():
+        raise ErrorEnvio("Falta el secreto BREVO_API_KEY.")
+    m = RE_CLAVE_API.search(crudo)
+    forma = "tenía espacios o texto alrededor"
+    if not m:
+        decodificado = _desde_base64(crudo)
+        m = RE_CLAVE_API.search(decodificado) if decodificado else None
+        forma = "estaba en base64, la versión «MCP» de Brevo"
+    if not m:
+        if "xsmtpsib-" in crudo:
+            raise ErrorEnvio(
+                "El secreto BREVO_API_KEY tiene una clave SMTP (empieza por «xsmtpsib-»), que no sirve para crear "
+                "campañas. Hace falta una clave de API (empieza por «xkeysib-»): en Brevo, SMTP y API → pestaña "
+                "«Claves API y MCP» → «Generar una nueva clave API». Después, guárdala otra vez en GitHub.")
+        raise ErrorEnvio(
+            "El secreto BREVO_API_KEY no contiene una clave de API de Brevo (empiezan por «xkeysib-»; "
+            f"lo guardado tiene {len(crudo.strip())} caracteres). Copia la clave completa al crearla en Brevo "
+            "(SMTP y API → «Claves API y MCP») y guárdala otra vez en GitHub.")
+    clave = m.group(0)
+    if os.environ.get("GITHUB_ACTIONS"):
+        print(f"::add-mask::{clave}", flush=True)  # que GitHub la tape también si sale de un base64
+    if clave != crudo.strip():
+        aviso(f"El secreto BREVO_API_KEY no tenía la clave sola ({forma}): se usa la clave xkeysib- que contiene.")
+    return clave
+
+
 def explicar(e: BrevoError) -> str:
     if e.estado == 401:
-        return ("Brevo rechaza la clave (401). Puede haber caducado o haberse borrado: crea otra en Brevo "
-                "(SMTP y API > Claves API) y guárdala en GitHub como secreto BREVO_API_KEY.")
+        detalle = str(e).strip()
+        if "unrecogni" in detalle.lower() or " ip " in f" {detalle.lower()} ":
+            return ("Brevo bloquea la llamada por la dirección IP (401). GitHub usa una IP distinta en cada "
+                    "ejecución: en Brevo, Seguridad → IP autorizadas, desactiva el bloqueo de IP desconocidas. "
+                    f"Brevo dice: «{detalle}»")
+        return ("Brevo rechaza la clave (401" + (f": «{detalle}»" if detalle else "") + "). Comprueba que el "
+                "secreto BREVO_API_KEY tiene la clave de API completa de la cuenta de ValQual (empieza por "
+                "«xkeysib-»). Si se borró o caducó, crea otra en Brevo (SMTP y API → «Claves API y MCP») y "
+                "guárdala otra vez en GitHub.")
     if e.estado == 402:
         return ("Brevo dice que no hay créditos suficientes (402): probablemente se ha alcanzado el límite "
                 "diario del plan gratuito (300 emails). Prueba mañana o revisa el plan.")
@@ -633,10 +692,8 @@ def construir() -> int:
 
 
 def prueba() -> int:
-    clave = os.environ.get("BREVO_API_KEY", "").strip()
-    if not clave:
-        raise ErrorEnvio("Falta el secreto BREVO_API_KEY.")
-    destino = os.environ.get("EMAIL_PRUEBA", "").strip() or "info@valqual.app"
+    clave = leer_clave()
+    destino =os.environ.get("EMAIL_PRUEBA", "").strip() or "info@valqual.app"
     ahora = ahora_utc()
     c, html_brevo = preparar(comprobar=True)
     for nombre, url in enlaces(c).items():
@@ -691,9 +748,7 @@ def enviar() -> int:
     if os.environ.get("EMAIL_SEMANAL", "").strip().lower() != "on":
         print("El email semanal está apagado (EMAIL_SEMANAL no vale «on»): no se envía nada.")
         return 0
-    clave = os.environ.get("BREVO_API_KEY", "").strip()
-    if not clave:
-        raise ErrorEnvio("Falta el secreto BREVO_API_KEY.")
+    clave = leer_clave()
     listas = leer_listas()
     limite = leer_limite()
     ahora = ahora_utc()
